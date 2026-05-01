@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>头球大师</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div id="app">
+    <div class="phone-shell">
+      
+      <section class="screen active home-screen" id="menuScreen">
+        <div class="menu-scroll home-scroll">
+          <div class="home-top brand-top-image-logo">
+            <img id="homeLogoImage" class="home-main-logo-image" src="./assets/branding/logo_home.png" alt="头球大师 Logo">
+          </div>
+          <div class="home-grid">
+            <button type="button" class="home-tile primary tile-challenge" id="challengeHomeBtn" data-nav="levelSelect">
+              <div class="home-tile-icon image-icon challenge-icon-wrap"><img class="challenge-icon-animated" src="./assets/icons/icon_menu_challenge.png" alt="挑战"></div>
+              <div>
+                <div class="home-tile-title" id="homeTitleChallenge">挑战</div>
+              </div>
+            </button>
+
+            <button type="button" class="home-tile tile-profile" id="profileBtn" data-nav="profile">
+              <div class="home-tile-icon image-icon"><img src="./assets/icons/icon_menu_showroom.png" alt="展厅"></div>
+              <div>
+                <div class="home-tile-title" id="homeTitleProfile">展厅</div>
+              </div>
+            </button>
+
+            <button type="button" class="home-tile tile-shop" id="shopBtn" data-nav="shop">
+              <div class="home-tile-icon image-icon"><img src="./assets/icons/icon_menu_market.png" alt="商城"></div>
+              <div>
+                <div class="home-tile-title" id="homeTitleShop">商城</div>
+              </div>
+            </button>
+
+            <button type="button" class="home-tile tile-settings" id="settingsBtn" data-nav="settings">
+              <div class="home-tile-icon image-icon"><img src="./assets/icons/icon_menu_settings.png" alt="设置"></div>
+              <div>
+                <div class="home-tile-title" id="homeTitleSettings">设置</div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </section>
+
+
+      
+      <section class="screen" id="levelSelectScreen">
+        <div class="route-screen-shell">
+          <div class="back-row route-topbar">
+            <button type="button" class="icon-back" id="levelSelectBackBtn" data-nav="menu">‹</button>
+            <div class="route-topbar-right">
+              <div class="cash-chip shop-cash-chip" id="levelSelectCash">0</div>
+              <div class="energy-chip" id="levelSelectEnergyChip">
+                <span class="energy-chip-icon" aria-hidden="true"></span>
+                <span class="energy-chip-value" id="levelSelectEnergyIndicator">20</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="menu-scroll level-route-scroll">
+            <div class="level-roadmap" id="levelGrid"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="settingsScreen">
+        <div class="back-row route-topbar shop-topbar-upgraded">
+          <button type="button" class="icon-back" id="settingsBackBtn" data-nav="menu">‹</button>
+          <div class="route-topbar-right shop-topbar-right">
+            <div class="cash-chip shop-cash-chip" id="settingsCash">0</div>
+          </div>
+        </div>
+        <div class="menu-scroll" style="padding-top:0;">
+          <div class="panel" style="min-height: 520px;">
+            <div class="section-title" id="settingsSectionTitle">设置</div>
+            <div class="settings-note" id="settingsNote">调整背景音乐和音效音量。设置会自动保存。</div>
+            <div class="audio-settings">
+              <div class="audio-setting-row">
+                <div class="audio-setting-head"><span id="musicLabel">背景音乐</span><span id="musicVolumeValue">36%</span></div>
+                <input type="range" id="musicVolumeSlider" min="0" max="100" value="36" class="audio-slider" aria-label="背景音乐音量">
+              </div>
+              <div class="audio-setting-row">
+                <div class="audio-setting-head"><span id="effectLabel">音效</span><span id="effectVolumeValue">65%</span></div>
+                <input type="range" id="effectVolumeSlider" min="0" max="100" value="65" class="audio-slider" aria-label="音效音量">
+              </div>
+            </div>
+            <div class="audio-setting-row language-setting-row">
+                <div class="audio-setting-head"><span id="languageLabel">语言</span><span id="languageCurrentValue">中文</span></div>
+                <div class="language-switch-row">
+                  <button type="button" class="lang-switch-btn active" id="langBtnZh">中文</button>
+                  <button type="button" class="lang-switch-btn" id="langBtnEn">English</button>
+                </div>
+              </div>
+            <div class="button-row" style="grid-template-columns: 1fr; margin-top: 18px;">
+              <button type="button" class="ghost-button" id="resetSaveBtn">清除存档</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="gameScreen">
+        <div class="game-wrap">
+          <div class="hud hud-formal">
+            <div class="hud-row hud-row-top">
+              <div class="hud-panel hud-panel-level">
+                <img id="hudLevelPanelImg" class="hud-panel-bg" src="assets/ui/hud_level_panel.png" alt="关卡栏">
+                <div class="hud-panel-value hud-panel-value-level" id="hudLevel">1</div>
+              </div>
+            </div>
+            <div class="hud-row hud-row-bottom">
+              <div class="hud-panel hud-panel-coin">
+                <img id="hudCoinPanelImg" class="hud-panel-bg" src="assets/ui/hud_coin_panel.png" alt="金币栏">
+                <div class="hud-panel-value hud-panel-value-coin" id="hudCash">0</div>
+              </div>
+              <div class="hud-panel hud-panel-time">
+                <img id="hudTimePanelImg" class="hud-panel-bg" src="assets/ui/hud_time_panel.png" alt="剩余时间栏">
+                <div class="hud-panel-value hud-panel-value-time" id="hudTime">60.0</div>
+              </div>
+            </div>
+          </div>
+          <canvas id="gameCanvas" width="430" height="860"></canvas>
+        </div>
+      </section>
+
+      <section class="screen" id="resultScreen">
+        <div class="back-row"><button type="button" class="icon-back" id="resultBackBtn" data-nav="menu">‹</button></div>
+        <div class="result-card">
+          <div class="result-title" id="resultTitle">过关成功</div>
+          <div class="result-avatar-wrap">
+            <img id="resultAvatar" class="result-avatar" src="assets/ui/result_avatar_happy.png" alt="结果头像">
+          </div>
+          <div class="result-stats">
+            <div class="result-stat"><div class="result-stat-label" id="resultLabelLevel">关卡</div><div class="result-stat-value" id="resultLevel">1</div></div>
+            <div class="result-stat"><div class="result-stat-label" id="resultLabelCash">本局金币</div><div class="result-stat-value" id="bigCash">+$0</div></div>
+            <div class="result-stat"><div class="result-stat-label" id="resultLabelTime">本局坚持时间</div><div class="result-stat-value" id="resultTime">0.0s</div></div>
+            <div class="result-stat"><div class="result-stat-label" id="resultLabelEnergy">剩余体力</div><div class="result-stat-value" id="resultEnergy">0</div></div>
+          </div>
+          <div style="margin-top:16px" class="button-row">
+            <button type="button" class="button" id="retryBtn">重开本关</button>
+            <button type="button" class="ghost-button" id="menuBtn" data-nav="menu">返回主页</button>
+          </div>
+          <div style="margin-top:12px; display:none;" class="button-row" id="resultNextRow">
+            <button type="button" class="ghost-button" id="nextBtn">下一关</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="profileScreen">
+        <div class="back-row shop-topbar-upgraded profile-topbar">
+          <button type="button" class="icon-back" id="profileBackBtn" data-nav="menu">‹</button>
+          <div class="shop-topbar-right">
+            <div class="cash-chip shop-cash-chip" id="profileCash">0</div>
+            <div class="energy-chip" id="profileEnergyChip">
+              <span class="energy-chip-icon" aria-hidden="true"></span>
+              <span class="energy-chip-value" id="profileEnergyIndicator">20</span>
+            </div>
+          </div>
+        </div>
+        <div class="menu-scroll profile-showcase-scroll" style="padding-top:0;">
+          <div class="profile-owned-chip">
+            <span class="profile-owned-chip-icon" aria-hidden="true"></span>
+            <span><span id="profileOwnedPrefix">已拥有藏品</span> <strong id="ownedCount">0 / 10</strong></span>
+          </div>
+          <div class="showcase-cabinet" id="profileShowcaseCabinet">
+            <div class="showcase-list" id="profileShowcaseList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="shopScreen">
+        <div class="back-row shop-topbar-upgraded">
+          <button type="button" class="icon-back" id="shopBackBtn" data-nav="menu">‹</button>
+          <div class="shop-topbar-right">
+            <div class="cash-chip shop-cash-chip" id="shopCash">0</div>
+            <div class="energy-chip" id="shopEnergyChip">
+              <span class="energy-chip-icon" aria-hidden="true"></span>
+              <span class="energy-chip-value" id="shopEnergyIndicator">20</span>
+            </div>
+          </div>
+        </div>
+        <div class="shop-tab-row" id="shopTabRow">
+          <button type="button" class="shop-main-tab active" id="shopTabCollection">藏品</button>
+          <button type="button" class="shop-main-tab" id="shopTabEnergy">体力</button>
+        </div>
+        <div class="menu-scroll shop-scroll-upgraded" style="padding-top:0;">
+          <div class="shop-grid upgraded-shop-grid" id="shopGrid"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+
+  <div class="overlay-modal" id="confirmModal">
+    <div class="overlay-card">
+      <div class="overlay-header">
+        <div class="overlay-header-icon">✦</div>
+        <div class="overlay-header-bar">
+          <div class="overlay-item-title-row"><img id="confirmModalItemIcon" class="overlay-item-icon" alt=""><div class="overlay-title" id="confirmModalTitle">确认购买</div></div>
+        </div>
+      </div>
+      <div class="overlay-text" id="confirmModalText">是否确认执行当前操作？</div>
+      <div class="overlay-actions">
+        <button type="button" class="ghost-button overlay-btn" id="confirmCancelBtn">取消</button>
+        <button type="button" class="button overlay-btn" id="confirmOkBtn">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay-modal" id="adModal">
+    <div class="overlay-card ad-card">
+      <div class="overlay-header">
+        <div class="overlay-header-icon">✦</div>
+        <div class="overlay-header-bar">
+          <div class="overlay-title" id="adModalTitle">广告奖励</div>
+        </div>
+      </div>
+      <div class="overlay-text" id="adModalText">演示广告窗口，倒计时结束后可领取体力。</div>
+      <div class="ad-countdown-wrap"><span id="adCountdown">5</span>s</div>
+      <button type="button" class="button overlay-btn" id="adCloseBtn" disabled>请等待</button>
+    </div>
+  </div>
+
+  <div class="game-toast" id="gameToast" aria-live="polite"></div>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
