@@ -23,6 +23,7 @@ const ui = {
   shopBtn: document.getElementById('shopBtn'),
   settingsBtn: document.getElementById('settingsBtn'),
   gameToast: document.getElementById('gameToast'),
+  soundUnlockBtn: document.getElementById('soundUnlockBtn'),
   menuUnlockCount: document.getElementById('menuUnlockCount'),
   menuCollectionValue: document.getElementById('menuCollectionValue'),
 
@@ -136,6 +137,7 @@ SOCCER_BALL_IMG.src = 'assets/ball/soccer_ball.png';
 const AudioManager = {
   unlocked: false,
   bgmStarted: false,
+  userInteracted: false,
   musicVolume: 0.36,
   effectVolume: 0.65,
   STORAGE_KEY: 'headball_tycoon_audio_settings',
@@ -155,12 +157,15 @@ const AudioManager = {
 
   init() {
     this.loadSettings();
-    this.tracks.bgm.loop = true;
+    const bgm = this.tracks.bgm;
+    bgm.loop = true;
+    bgm.autoplay = false;
     Object.values(this.tracks).forEach(audio => {
       try {
         audio.preload = 'auto';
         audio.setAttribute('playsinline', 'true');
         audio.setAttribute('webkit-playsinline', 'true');
+        audio.load();
       } catch (error) {}
     });
     this.applyVolumes();
@@ -195,7 +200,8 @@ const AudioManager = {
     this.musicVolume = this.clampVolume(value);
     this.applyVolumes();
     this.saveSettings();
-    if (this.musicVolume > 0) this.resumeBgm();
+    if (this.musicVolume > 0) this.tryStartBgm(true);
+    else this.hidePrompt();
   },
 
   setEffectVolume(value) {
@@ -205,67 +211,101 @@ const AudioManager = {
   },
 
   unlock() {
-    // Mobile browsers only allow audio after a real user gesture.
-    // Do not mark it as permanently unlocked until the BGM actually starts,
-    // otherwise a failed first attempt would prevent later retries.
-    this.playBgm();
+    this.userInteracted = true;
+    return this.tryStartBgm(true);
   },
 
-  playBgm() {
+  showPrompt() {
+    if (!ui.soundUnlockBtn || this.musicVolume <= 0 || this.bgmStarted) return;
+    ui.soundUnlockBtn.classList.remove('is-hidden');
+  },
+
+  hidePrompt() {
+    if (ui.soundUnlockBtn) ui.soundUnlockBtn.classList.add('is-hidden');
+  },
+
+  tryStartBgm(showPromptOnFail = false) {
     const bgm = this.tracks.bgm;
-    if (!bgm || this.musicVolume <= 0) return Promise.resolve(false);
+    if (!bgm || this.musicVolume <= 0) {
+      this.hidePrompt();
+      return Promise.resolve(false);
+    }
+
+    if (!bgm.paused && this.bgmStarted) {
+      this.hidePrompt();
+      return Promise.resolve(true);
+    }
+
     try {
       bgm.muted = false;
       bgm.volume = this.musicVolume;
-      const result = bgm.play();
-      if (result && typeof result.then === 'function') {
-        return result.then(() => {
+      const playPromise = bgm.play();
+      if (playPromise && typeof playPromise.then === 'function') {
+        return playPromise.then(() => {
           this.unlocked = true;
           this.bgmStarted = true;
+          this.hidePrompt();
           return true;
         }).catch(() => {
           this.bgmStarted = false;
+          if (showPromptOnFail) this.showPrompt();
           return false;
         });
       }
       this.unlocked = true;
       this.bgmStarted = true;
+      this.hidePrompt();
       return Promise.resolve(true);
     } catch (error) {
       this.bgmStarted = false;
+      if (showPromptOnFail) this.showPrompt();
       return Promise.resolve(false);
     }
   },
 
   resumeBgm() {
-    const bgm = this.tracks.bgm;
-    if (!bgm || this.musicVolume <= 0) return;
-    if (!this.bgmStarted || bgm.paused) this.playBgm();
+    if (this.musicVolume <= 0) return;
+    this.tryStartBgm(this.userInteracted);
   },
 
   play(name) {
+    // Do not let SFX consume the only user gesture before BGM tries to start.
     this.resumeBgm();
     const audio = this.tracks[name];
     if (!audio) return;
-    try { audio.currentTime = 0; audio.play().catch(() => {}); } catch (error) {}
+    try {
+      audio.currentTime = 0;
+      const p = audio.play();
+      if (p && typeof p.catch === 'function') p.catch(() => {});
+    } catch (error) {}
   },
 
   bindGestureUnlock() {
-    const tryUnlock = () => this.resumeBgm();
-    // Keep listening instead of once:true, because iOS/Android may reject the
-    // first attempt depending on timing. Later taps should retry automatically.
-    document.addEventListener('pointerdown', tryUnlock, { passive: true });
-    document.addEventListener('touchstart', tryUnlock, { passive: true });
-    document.addEventListener('mousedown', tryUnlock, { passive: true });
-    document.addEventListener('keydown', tryUnlock);
+    const tryUnlock = () => {
+      this.userInteracted = true;
+      this.tryStartBgm(true);
+    };
+    // Mobile browsers differ: iOS Safari often works best on touchend/click,
+    // while Android Chrome usually accepts pointerdown. Keep all of them.
+    ['pointerdown', 'touchstart', 'touchend', 'mousedown', 'click', 'keydown'].forEach(type => {
+      document.addEventListener(type, tryUnlock, { capture: true, passive: true });
+    });
+    if (ui.soundUnlockBtn) {
+      ui.soundUnlockBtn.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        this.userInteracted = true;
+        this.tryStartBgm(true);
+      }, { capture: true });
+    }
   },
 
   bindButtonClicks() {
     document.addEventListener('click', event => {
-      this.resumeBgm();
       const target = event.target.closest('button, .level-card, .compact-item-buy, .compact-item-owned, [data-nav]');
       if (!target) return;
-      this.play('click');
+      this.userInteracted = true;
+      this.tryStartBgm(true).finally(() => this.play('click'));
     }, true);
   },
 };
@@ -506,6 +546,7 @@ const I18N = {
     'toast.buyEnergy': '已购买 {name}，体力 +{energy}',
     'toast.adDone': '观看完成，体力已恢复',
     'toast.saveCleared': '本地存档已清除',
+    'audio.enable': '点击开启音乐',
     'toast.watchReward': '观看广告后可获得{energy}点体力。',
     'toast.buyReward': '购买后可加{energy}点体力。',
     'shop.buyAsk': '是否花费 ${price} 购买「{name}」？',
@@ -576,6 +617,7 @@ const I18N = {
     'toast.buyEnergy': 'Purchased {name}, energy +{energy}',
     'toast.adDone': 'Ad completed, energy restored',
     'toast.saveCleared': 'Local save cleared',
+    'audio.enable': 'Tap for Music',
     'toast.watchReward': 'Watch an ad to gain {energy} energy.',
     'toast.buyReward': 'Purchase to restore {energy} energy.',
     'shop.buyAsk': 'Spend ${price} to buy "{name}"?',
@@ -702,6 +744,7 @@ const UIText = {
     if (ui.adModalTitle) ui.adModalTitle.textContent = t('modal.adTitle');
     if (ui.adModalText) ui.adModalText.textContent = t('modal.adText');
     if (ui.adCloseBtn && !ui.adModal?.classList.contains('show')) ui.adCloseBtn.textContent = t('ad.wait');
+    if (ui.soundUnlockBtn) ui.soundUnlockBtn.textContent = t('audio.enable');
   }
 };
 

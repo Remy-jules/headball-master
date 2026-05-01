@@ -7557,3 +7557,30 @@ html[lang='en'] #levelSelectScreen .route-node-tip {
   justify-content: center !important;
   align-items: center !important;
 }
+
+
+/* ===== V4.8.1 手机浏览器背景音乐解锁提示 ===== */
+.sound-unlock-btn {
+  position: fixed;
+  left: 50%;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 9999;
+  min-width: 150px;
+  height: 46px;
+  padding: 0 18px;
+  border: 1px solid rgba(255, 226, 96, 0.75);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(37, 142, 255, 0.96), rgba(5, 66, 180, 0.96));
+  color: #fff;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.22);
+  text-shadow: 0 2px 5px rgba(0,0,0,0.35);
+  cursor: pointer;
+}
+
+.sound-unlock-btn.is-hidden {
+  display: none !important;
+}
