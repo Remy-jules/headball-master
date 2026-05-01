@@ -156,6 +156,13 @@ const AudioManager = {
   init() {
     this.loadSettings();
     this.tracks.bgm.loop = true;
+    Object.values(this.tracks).forEach(audio => {
+      try {
+        audio.preload = 'auto';
+        audio.setAttribute('playsinline', 'true');
+        audio.setAttribute('webkit-playsinline', 'true');
+      } catch (error) {}
+    });
     this.applyVolumes();
   },
 
@@ -188,6 +195,7 @@ const AudioManager = {
     this.musicVolume = this.clampVolume(value);
     this.applyVolumes();
     this.saveSettings();
+    if (this.musicVolume > 0) this.resumeBgm();
   },
 
   setEffectVolume(value) {
@@ -197,33 +205,64 @@ const AudioManager = {
   },
 
   unlock() {
-    if (this.unlocked) return;
-    this.unlocked = true;
+    // Mobile browsers only allow audio after a real user gesture.
+    // Do not mark it as permanently unlocked until the BGM actually starts,
+    // otherwise a failed first attempt would prevent later retries.
     this.playBgm();
   },
 
   playBgm() {
     const bgm = this.tracks.bgm;
-    if (!bgm) return;
-    bgm.play().then(() => { this.bgmStarted = true; }).catch(() => { this.bgmStarted = false; });
+    if (!bgm || this.musicVolume <= 0) return Promise.resolve(false);
+    try {
+      bgm.muted = false;
+      bgm.volume = this.musicVolume;
+      const result = bgm.play();
+      if (result && typeof result.then === 'function') {
+        return result.then(() => {
+          this.unlocked = true;
+          this.bgmStarted = true;
+          return true;
+        }).catch(() => {
+          this.bgmStarted = false;
+          return false;
+        });
+      }
+      this.unlocked = true;
+      this.bgmStarted = true;
+      return Promise.resolve(true);
+    } catch (error) {
+      this.bgmStarted = false;
+      return Promise.resolve(false);
+    }
+  },
+
+  resumeBgm() {
+    const bgm = this.tracks.bgm;
+    if (!bgm || this.musicVolume <= 0) return;
+    if (!this.bgmStarted || bgm.paused) this.playBgm();
   },
 
   play(name) {
-    this.unlock();
+    this.resumeBgm();
     const audio = this.tracks[name];
     if (!audio) return;
     try { audio.currentTime = 0; audio.play().catch(() => {}); } catch (error) {}
   },
 
   bindGestureUnlock() {
-    const unlockOnce = () => this.unlock();
-    document.addEventListener('pointerdown', unlockOnce, { once: true, passive: true });
-    document.addEventListener('touchstart', unlockOnce, { once: true, passive: true });
-    document.addEventListener('keydown', unlockOnce, { once: true });
+    const tryUnlock = () => this.resumeBgm();
+    // Keep listening instead of once:true, because iOS/Android may reject the
+    // first attempt depending on timing. Later taps should retry automatically.
+    document.addEventListener('pointerdown', tryUnlock, { passive: true });
+    document.addEventListener('touchstart', tryUnlock, { passive: true });
+    document.addEventListener('mousedown', tryUnlock, { passive: true });
+    document.addEventListener('keydown', tryUnlock);
   },
 
   bindButtonClicks() {
     document.addEventListener('click', event => {
+      this.resumeBgm();
       const target = event.target.closest('button, .level-card, .compact-item-buy, .compact-item-owned, [data-nav]');
       if (!target) return;
       this.play('click');
